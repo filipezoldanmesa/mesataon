@@ -1,0 +1,11 @@
+node_modules/
+.next/
+out/
+coverage/
+*.tsbuildinfo
+.env.local
+.env*.local
+.DS_Store
+.turbo/
+# Upstream clonado pelo `pnpm sync:upstream`
+.upstream/

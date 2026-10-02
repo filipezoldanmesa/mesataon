@@ -1,0 +1,39 @@
+{
+  "name": "vibra-gestor-oportunidades-prototipo",
+  "version": "0.0.1",
+  "private": true,
+  "description": "Espelho navegável do Gestor de Oportunidades com TODOS os dados mockados — onde o design cria funcionalidades novas antes de virarem task.",
+  "scripts": {
+    "dev": "next dev --turbopack",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "typecheck": "tsc --noEmit",
+    "check": "pnpm typecheck && pnpm lint && pnpm mocks:cobertura",
+    "mocks:cobertura": "node scripts/cobertura-mocks.mjs",
+    "sync:upstream": "node scripts/sync-upstream.mjs"
+  },
+  "dependencies": {
+    "next": "^15.0.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "devDependencies": {
+    "@eslint/eslintrc": "^3.0.0",
+    "@tailwindcss/postcss": "^4.0.0",
+    "@types/node": "^22.0.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "@typescript-eslint/eslint-plugin": "^8.0.0",
+    "@typescript-eslint/parser": "^8.0.0",
+    "eslint": "^9.0.0",
+    "eslint-config-next": "^15.0.0",
+    "tailwindcss": "^4.0.0",
+    "typescript": "^5.4.0"
+  },
+  "packageManager": "pnpm@11.9.0",
+  "engines": {
+    "node": ">=22",
+    "pnpm": ">=9"
+  }
+}

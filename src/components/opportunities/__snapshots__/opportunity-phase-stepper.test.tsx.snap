@@ -1,0 +1,236 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`OpportunityPhaseStepper > snapshot: 8-step stepper at EM_MINUTA 1`] = `
+<nav
+  aria-label="Fases da oportunidade"
+  class="mt-4 pb-1"
+>
+  <ol
+    class="flex list-none items-start p-0"
+  >
+    <li
+      class="flex flex-1 items-start last:flex-initial"
+    >
+      <div
+        class="flex min-w-20 shrink-0 flex-col items-center gap-1"
+      >
+        <span
+          aria-hidden="true"
+          class="flex h-8 w-8 items-center justify-center rounded-full border-2 text-(length:--t-caption) font-bold tracking-[0.4px] border-(--secondary-500) bg-(--secondary-500) text-white"
+        >
+          <svg
+            aria-hidden="true"
+            fill="none"
+            height="16"
+            viewBox="0 0 16 16"
+            width="16"
+          >
+            <path
+              d="M3 8L6.5 11.5L13 5"
+              stroke="currentColor"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+            />
+          </svg>
+        </span>
+        <span
+          class="line-clamp-2 max-w-24 text-center text-(length:--t-small) leading-[1.37] tracking-[0.4px] text-(--secondary-500)"
+        >
+          Preenchimento
+        </span>
+      </div>
+      <span
+        aria-hidden="true"
+        class="mt-4 h-0.5 min-w-4 flex-1 min-[761px]:min-w-8 bg-(--secondary-500)"
+      />
+    </li>
+    <li
+      class="flex flex-1 items-start last:flex-initial"
+    >
+      <div
+        class="flex min-w-20 shrink-0 flex-col items-center gap-1"
+      >
+        <span
+          aria-hidden="true"
+          class="flex h-8 w-8 items-center justify-center rounded-full border-2 text-(length:--t-caption) font-bold tracking-[0.4px] border-(--secondary-500) bg-(--secondary-500) text-white"
+        >
+          <svg
+            aria-hidden="true"
+            fill="none"
+            height="16"
+            viewBox="0 0 16 16"
+            width="16"
+          >
+            <path
+              d="M3 8L6.5 11.5L13 5"
+              stroke="currentColor"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+            />
+          </svg>
+        </span>
+        <span
+          class="line-clamp-2 max-w-24 text-center text-(length:--t-small) leading-[1.37] tracking-[0.4px] text-(--secondary-500)"
+        >
+          Análise
+        </span>
+      </div>
+      <span
+        aria-hidden="true"
+        class="mt-4 h-0.5 min-w-4 flex-1 min-[761px]:min-w-8 bg-(--secondary-500)"
+      />
+    </li>
+    <li
+      class="flex flex-1 items-start last:flex-initial"
+    >
+      <div
+        class="flex min-w-20 shrink-0 flex-col items-center gap-1"
+      >
+        <span
+          aria-hidden="true"
+          class="flex h-8 w-8 items-center justify-center rounded-full border-2 text-(length:--t-caption) font-bold tracking-[0.4px] border-(--secondary-500) bg-(--secondary-500) text-white"
+        >
+          <svg
+            aria-hidden="true"
+            fill="none"
+            height="16"
+            viewBox="0 0 16 16"
+            width="16"
+          >
+            <path
+              d="M3 8L6.5 11.5L13 5"
+              stroke="currentColor"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+            />
+          </svg>
+        </span>
+        <span
+          class="line-clamp-2 max-w-24 text-center text-(length:--t-small) leading-[1.37] tracking-[0.4px] text-(--secondary-500)"
+        >
+          Aprovação
+        </span>
+      </div>
+      <span
+        aria-hidden="true"
+        class="mt-4 h-0.5 min-w-4 flex-1 min-[761px]:min-w-8 bg-(--secondary-500)"
+      />
+    </li>
+    <li
+      class="flex flex-1 items-start last:flex-initial"
+    >
+      <div
+        aria-current="step"
+        class="flex min-w-20 shrink-0 flex-col items-center gap-1"
+      >
+        <span
+          aria-hidden="true"
+          class="flex h-8 w-8 items-center justify-center rounded-full border-2 text-(length:--t-caption) font-bold tracking-[0.4px] border-(--secondary-500) text-(--secondary-500)"
+        >
+          4
+        </span>
+        <span
+          class="line-clamp-2 max-w-24 text-center text-(length:--t-small) leading-[1.37] tracking-[0.4px] font-bold text-(--neutral-800)"
+        >
+          Minuta
+        </span>
+      </div>
+      <span
+        aria-hidden="true"
+        class="mt-4 h-0.5 min-w-4 flex-1 min-[761px]:min-w-8 bg-(--neutral-200)"
+      />
+    </li>
+    <li
+      class="flex flex-1 items-start last:flex-initial"
+    >
+      <div
+        class="flex min-w-20 shrink-0 flex-col items-center gap-1"
+      >
+        <span
+          aria-hidden="true"
+          class="flex h-8 w-8 items-center justify-center rounded-full border-2 text-(length:--t-caption) font-bold tracking-[0.4px] border-(--neutral-200) text-(--neutral-500)"
+        >
+          5
+        </span>
+        <span
+          class="line-clamp-2 max-w-24 text-center text-(length:--t-small) leading-[1.37] tracking-[0.4px] text-(--neutral-500)"
+        >
+          Assinatura
+        </span>
+      </div>
+      <span
+        aria-hidden="true"
+        class="mt-4 h-0.5 min-w-4 flex-1 min-[761px]:min-w-8 bg-(--neutral-200)"
+      />
+    </li>
+    <li
+      class="flex flex-1 items-start last:flex-initial"
+    >
+      <div
+        class="flex min-w-20 shrink-0 flex-col items-center gap-1"
+      >
+        <span
+          aria-hidden="true"
+          class="flex h-8 w-8 items-center justify-center rounded-full border-2 text-(length:--t-caption) font-bold tracking-[0.4px] border-(--neutral-200) text-(--neutral-500)"
+        >
+          6
+        </span>
+        <span
+          class="line-clamp-2 max-w-24 text-center text-(length:--t-small) leading-[1.37] tracking-[0.4px] text-(--neutral-500)"
+        >
+          Ativação dos Contratos
+        </span>
+      </div>
+      <span
+        aria-hidden="true"
+        class="mt-4 h-0.5 min-w-4 flex-1 min-[761px]:min-w-8 bg-(--neutral-200)"
+      />
+    </li>
+    <li
+      class="flex flex-1 items-start last:flex-initial"
+    >
+      <div
+        class="flex min-w-20 shrink-0 flex-col items-center gap-1"
+      >
+        <span
+          aria-hidden="true"
+          class="flex h-8 w-8 items-center justify-center rounded-full border-2 text-(length:--t-caption) font-bold tracking-[0.4px] border-(--neutral-200) text-(--neutral-500)"
+        >
+          7
+        </span>
+        <span
+          class="line-clamp-2 max-w-24 text-center text-(length:--t-small) leading-[1.37] tracking-[0.4px] text-(--neutral-500)"
+        >
+          Pagamento
+        </span>
+      </div>
+      <span
+        aria-hidden="true"
+        class="mt-4 h-0.5 min-w-4 flex-1 min-[761px]:min-w-8 bg-(--neutral-200)"
+      />
+    </li>
+    <li
+      class="flex flex-1 items-start last:flex-initial"
+    >
+      <div
+        class="flex min-w-20 shrink-0 flex-col items-center gap-1"
+      >
+        <span
+          aria-hidden="true"
+          class="flex h-8 w-8 items-center justify-center rounded-full border-2 text-(length:--t-caption) font-bold tracking-[0.4px] border-(--neutral-200) text-(--neutral-500)"
+        >
+          8
+        </span>
+        <span
+          class="line-clamp-2 max-w-24 text-center text-(length:--t-small) leading-[1.37] tracking-[0.4px] text-(--neutral-500)"
+        >
+          Concluída
+        </span>
+      </div>
+    </li>
+  </ol>
+</nav>
+`;

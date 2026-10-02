@@ -1,0 +1,147 @@
+@import "tailwindcss";
+
+/* =========================================================
+   `short:` — a viewport-HEIGHT variant.
+
+   Every breakpoint Tailwind ships is a `min-width` query, and for a tall form
+   inside a modal that is the wrong axis: a 805×630 window is `sm`, `md` and
+   `lg` by width while having less vertical room than a phone. The "Dados da
+   proposta" modal was measured at exactly that size — 745px of form in a 590px
+   card — and read as broken (top row sliced under the sticky header, last row
+   and the "Repetir datas" button below the fold), even though every width
+   breakpoint was behaving.
+
+   760px is where the modal can no longer show its form without scrolling even
+   in the 2-column layout (≈745px of fields + ≈133px of sticky header/footer),
+   so below it vertical space is worth more than the card's inset and rounded
+   corners.
+
+   Use it for vertical rhythm and modal chrome only. Column counts still belong
+   to width queries (or to `@container`, when the box is narrower than the
+   viewport).
+   ========================================================= */
+@custom-variant short (@media (max-height: 760px));
+
+/* =========================================================
+   Vibra Design System — tokens (CSS variables)
+   Source: `vibra-ui.css` prototype / vibra-design-system (v1.0),
+   aligned with the official DS (Figma). Shared foundation for
+   every screen — do not hardcode loose color/typography values.
+   ========================================================= */
+:root {
+  /* Primary — institutional green */
+  --primary-100:#e6ede7; --primary-200:#bfd1c4; --primary-300:#80a389; --primary-400:#40754e;
+  --primary-500:#044317; --primary-600:#00350e; --primary-700:#00240a; --primary-800:#001205;
+
+  /* Secondary — interactive green (actions/links/active state) */
+  --secondary-100:#e6f0e1; --secondary-200:#c9e0bf; --secondary-300:#93c180; --secondary-400:#5ca140;
+  --secondary-500:#418020; --secondary-600:#326517; --secondary-700:#275111; --secondary-800:#1d3c0a;
+  /* Hover state for secondary action buttons — between -500 and -600; no palette step existed. */
+  --secondary-hover:#3c781e;
+
+  --yellow-100:#fbf9e9; --yellow-200:#f5efc9; --yellow-300:#ecdf93; --yellow-400:#e2cf5c;
+  --yellow-500:#fedc00; --yellow-600:#d8bf26; --yellow-700:#6c6013; --yellow-800:#36300a;
+  --blue-100:#e8e8fd; --blue-200:#c6c6f9; --blue-300:#8d8df3; --blue-400:#5454ec;
+  --blue-500:#0000ff; --blue-600:#1414ad; --blue-700:#0e0e73; --blue-800:#07073a;
+  --red-100:#fcebeb; --red-300:#f09595; --red-500:#e24b4a; --red-700:#791f1f;
+
+  --neutral-0:#ffffff; --neutral-25:#f9f9f9; --neutral-40:#f2f2f2; --neutral-50:#eeeeee; --neutral-60:#f0f0f0;
+  --neutral-100:#e6e6e6; --neutral-200:#cccccc; --neutral-300:#b3b3b3; --neutral-400:#999999;
+  --neutral-500:#808080; --neutral-600:#666666; --neutral-700:#4d4d4d; --neutral-800:#2e2e2e;
+  --neutral-900:#1a1a1a; --neutral-1000:#000000;
+  --complement-500:#ff6900;
+
+  /* Status */
+  --color-success:#418020; --color-success-bg:#e6f0e1;
+  --color-warning:#9d6500; --color-warning-bg:#fff9e4;
+  --color-info:#006298;    --color-info-bg:#eef9ff;
+  --color-danger:#ad001f;  --color-danger-bg:#feeded;
+
+  /* Semantic */
+  --color-bg:var(--neutral-40); --color-surface:#fff; --color-text:var(--neutral-800);
+  --color-text-muted:var(--neutral-600); --color-primary:var(--primary-500);
+  --color-interactive:var(--secondary-500);
+  --color-border:var(--neutral-200); --color-border-strong:var(--neutral-300);
+  --shadow-card:2px 2px 4px 0 rgba(49,49,49,.10);
+  /* Dropdown menu shadow — prototype `.vdd-menu` box-shadow (blur 6px, alpha .14).
+     Distinct from --shadow-card (blur 4px, alpha .10) — do not unify. */
+  --shadow-menu:2px 2px 6px rgba(49,49,49,.14);
+  /* Disabled-state tokens — prototype `.vdd.disabled .vdd-trigger`.
+     #f4f5f5 is between --neutral-40 (#f2f2f2) and --neutral-50 (#eeeeee) — no existing token. */
+  --disabled-bg:#f4f5f5;   /* #f4f5f5 — prototype disabled trigger background */
+  --disabled-text:#767676; /* #767676 — prototype disabled trigger text color */
+
+  /* Typography */
+  --font-family:Arial, Helvetica, sans-serif;
+  --t-display3:36px; --t-h1:30px; --t-h2:24px; --t-h3:20px; --t-h4:18px;
+  --t-body:16px; --t-caption:14px; --t-small:12px;
+
+  /* Spacing and radii */
+  --space-4:4px; --space-8:8px; --space-12:12px; --space-16:16px; --space-24:24px;
+  --space-32:32px; --space-40:40px; --space-48:48px; --space-64:64px;
+  --radius-xxs:4px; --radius-xs:8px; --radius-sm:12px; --radius-md:16px; --radius-full:999px;
+  --grid-max:1312px;
+}
+
+body {
+  /* Mirror the prototype `body` foundation so every screen renders with the
+     same typeface, weight rendering, line box, and inherited text color. */
+  font-family: var(--font-family);
+  color: var(--color-text);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* The prototype's form controls keep the browser-default `line-height: normal`;
+   Tailwind Preflight instead forces `line-height: inherit`, so with the body at
+   1.5 every field grew taller (e.g. the search input rendered 43px vs the
+   prototype's 38px). Restore the design-aligned default across all controls. */
+input,
+textarea,
+select {
+  line-height: normal;
+}
+
+@layer base {
+  /* Tailwind v4 removed the Preflight rule that gave buttons `cursor: pointer`
+     (v3 had it), so every interactive control renders the arrow cursor unless
+     each call site repeats `cursor-pointer`. Restore it once here — single
+     source of truth — instead of patching ~120 buttons individually.
+
+     Declared inside `@layer base` on purpose: utilities beat base, so an
+     explicit `cursor-*` class at the call site (e.g. `disabled:cursor-not-allowed`
+     or a deliberate `cursor-not-allowed` on a placeholder CTA) still wins.
+     `:disabled` is also excluded so disabled controls keep the default arrow. */
+  button:not(:disabled),
+  [role="button"]:not(:disabled),
+  summary {
+    cursor: pointer;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   Collapsible card — the prototype's own mechanism (`03-proposta-nova.html`:
+   `.block.collapsed > :not(h3){display:none}`; `01b-oportunidade.html`:
+   `.collapsed > *:not(.sh){display:none}`), expressed as data attributes so a
+   card only has to mark its header and flip one attribute. Hiding by selector
+   keeps each block's body JSX untouched — no wrapper threaded through six
+   1000-line components.
+
+   ⚠️ DELIBERATELY UNLAYERED. It lived in `@layer base` first, and the chevron
+   rotated while the body stayed on screen: unlayered CSS beats every `@layer`,
+   but inside `base` it LOSES to the utilities layer — and most card bodies carry
+   a `flex`/`grid` utility, whose `display` then won. (This is the same cascade
+   fact the `cursor: pointer` rule above RELIES on, in the opposite direction:
+   there, a call site's `cursor-*` utility must win.) Do not move this into a
+   layer; a card whose body happens to have no display utility would keep
+   working, which is exactly how the bug survived a first round of testing.
+
+   Dialogs are exempt: a modal opened from the card renders as its child and
+   must not vanish with the body.
+   --------------------------------------------------------------------------- */
+[data-card-collapsed='true'] > :not([data-card-head]):not([role='dialog']):not([role='presentation']) {
+  display: none;
+}
+[data-card-collapsed='true'] > [data-card-head] {
+  margin-bottom: 0;
+}

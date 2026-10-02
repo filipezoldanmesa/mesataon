@@ -1,0 +1,6 @@
+# Repositório de pacote único — o arquivo existe só para a política de build
+# scripts do pnpm (a mesma do repositório de produção).
+allowBuilds:
+  esbuild: true
+  sharp: true
+  unrs-resolver: true
