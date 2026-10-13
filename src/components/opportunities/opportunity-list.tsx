@@ -1,6 +1,8 @@
 'use client';
 
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { StickyScrollX } from '@/components/ui/sticky-scroll-x';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { sapOrProspect, shownSapCode } from '@/lib/clients/customer-reference';
@@ -339,6 +341,7 @@ export function OpportunityList({
   load = listOpportunities,
   loadPipeline = getDashboardPipeline,
 }: Props) {
+  const router = useRouter();
   const [status, setStatus] = useState<'loading' | 'loaded' | 'error'>('loading');
   const [items, setItems] = useState<OpportunitySummary[]>([]);
   // `null` até a primeira carga voltar — o select mostra travessão em vez de
@@ -672,7 +675,7 @@ export function OpportunityList({
               {/* Horizontal scroll, like the client list: with 11 columns the
                   table outgrows the container, and `overflow-hidden` clipped
                   the trailing "Abrir ›" column off the page. */}
-              <div className="overflow-x-auto rounded-[var(--radius-xs)] border border-(--color-border) bg-(--color-surface) shadow-(--shadow-card)">
+              <StickyScrollX className="rounded-[var(--radius-xs)] border border-(--color-border) bg-(--color-surface) shadow-(--shadow-card)">
                 <table className="w-full min-w-[1200px] border-collapse text-(length:--t-caption)">
                   <thead>
                     <tr className="bg-(--neutral-50) text-left text-(length:--t-caption) tracking-[0.2px] text-(--neutral-800)">
@@ -705,7 +708,17 @@ export function OpportunityList({
                     {items.map((opp) => (
                       <tr
                         key={opp.id}
-                        className="border-t border-(--color-border) hover:bg-(--neutral-40)"
+                        className="cursor-pointer border-t border-(--color-border) hover:bg-(--neutral-40)"
+                        /* The whole row opens the opportunity. The links inside
+                           (title, "Abrir ›") keep working on their own — they stay
+                           the keyboard and screen-reader path — so a click that
+                           lands on one is left to it, and so is a click that ends
+                           a text selection. */
+                        onClick={(e) => {
+                          if ((e.target as HTMLElement).closest('a, button')) return;
+                          if (window.getSelection()?.toString()) return;
+                          router.push(`/oportunidades/${opp.id}`);
+                        }}
                       >
                         <td className="px-4 py-3">
                           <span className="font-bold text-(--neutral-900)">
@@ -776,7 +789,7 @@ export function OpportunityList({
                     ))}
                   </tbody>
                 </table>
-              </div>
+              </StickyScrollX>
 
               {/* Pagination — shown whenever there are (or were) multiple pages */}
               {(page > 1 || hasMore) && (
