@@ -37,6 +37,8 @@ import type {
 import type { BackendUpdateProposalResponse } from '@/lib/proposals/proposal-mapping';
 import type { SolicitarAjusteResult } from '@/lib/proposals/solicitar-ajuste.api';
 import type { ProposalSupplyCenters } from '@/lib/proposals/supply-centers.types';
+import type { ProductBatchDraft, ProductBatchRow, ProductBatchRowError } from '@/lib/proposals/product-batch.types';
+import { deriveDaysFromSapCode } from '@/lib/proposals/sap-payment-term-days';
 import type { EligibleProductListing, MarketIntelligence, ProductLine, UpsertProductLineInput } from '@/lib/proposals/types';
 import {
   Finalidade,
@@ -48,7 +50,7 @@ import {
 import { arquivoEnviado, erro, imagem, json, okVazio, pdf, semConteudo, semPermissao } from '../core/respostas';
 import { rotas, type MockContext } from '../core/router';
 import { temPapel, type MockUser } from '../core/session';
-import { agoraIso, novoId } from '../core/store';
+import { agoraIso, fatia, novoId } from '../core/store';
 import { moverPara, oportunidade, oportunidades } from '../estado-compartilhado';
 import type { OportunidadeElenco, PropostaElenco } from '../elenco';
 // A obra do Converge e o vínculo dela com a oportunidade são do domínio `contrato`.
@@ -62,6 +64,7 @@ import {
   CLIENTES_COM_ALLOWLIST,
   cpvNaBase,
   hojeIso,
+  mesesEntre,
   parseIso,
   primeiroDoMesSeguinte,
   produtoPorCodigo,
@@ -522,6 +525,188 @@ function removerLinha(ctx: MockContext): Response {
   c.e.produtos.splice(i, 1);
   marcarDesatualizado(c.e);
   return semConteudo();
+}
+
+// ───────────────────── Inclusão de produtos em lote (US 69180) ─────────────────────
+
+/** Rascunho da tabela de inclusão, por proposta (o autosave grava aqui). */
+const rascunhos = fatia<Record<string, ProductBatchDraft>>('propostas-rascunho-produtos', () => ({}));
+
+/**
+ * Prazo de pagamento da negociação (NEG) vigente do cliente para o produto. Mock:
+ * o Arla 32 não tem NEG, então vem vazio — a regra é "sem NEG, o campo fica vazio".
+ */
+function prazoDaNeg(codigo: string): string {
+  if (codigo === '7450') return '';
+  return codigo.startsWith('742') || codigo.startsWith('743') ? 'Z030' : 'Z015';
+}
+
+/** A linha com TODAS as sugestões do backend — o que a tela mostra ao abrir. */
+function linhaSugerida(c: Carregada, codigo: string): ProductBatchRow | null {
+  const p = produtoPorCodigo(codigo);
+  if (!p) return null;
+  const d = c.e.dados;
+  const base = basePorCodigo(d.supplyCenterCode);
+  const inicio = [primeiroDoMesSeguinte(hojeIso()), d.dataInicioAnalise].sort().reverse()[0];
+  const mesa = Math.max(20, Math.round(p.mix * 400));
+  return {
+    produtoCodigo: p.codigo,
+    produtoNome: p.nome,
+    base: base?.name ?? '',
+    baseCodigo: base?.code ?? null,
+    selecionado: true,
+    inicioConsumo: inicio,
+    fimConsumo: d.dataFimAnalise,
+    hvMeses: mesesEntre(inicio, d.dataFimAnalise),
+    quantidadeMesa: mesa,
+    volume: mesa,
+    margemRealizada: p.margemSugerida,
+    margemProposta: null,
+    incoterm: d.incotermPadrao ?? '',
+    prazoPagamento: prazoDaNeg(p.codigo),
+  };
+}
+
+/** Rascunho novo: os produtos elegíveis que ainda não estão na proposta (só com cadastro do cliente). */
+function rascunhoNovo(c: Carregada): ProductBatchDraft {
+  const lista = allowlistDe(c);
+  const jaNaProposta = new Set(c.e.produtos.map((l) => l.produtoCodigo));
+  const linhas = (lista ?? [])
+    .filter((codigo) => !jaNaProposta.has(codigo))
+    .map((codigo) => linhaSugerida(c, codigo))
+    .filter((l): l is ProductBatchRow => l !== null);
+  return { linhas, restritaAoCliente: !!lista, atualizadoEm: null };
+}
+
+/** Recalcula o que é derivado (o horizonte de vendas) — a tela nunca o calcula. */
+function recalcularLote(d: ProductBatchDraft): ProductBatchDraft {
+  return {
+    ...d,
+    linhas: d.linhas.map((l) => ({
+      ...l,
+      hvMeses: isoValida(l.inicioConsumo) && isoValida(l.fimConsumo) ? mesesEntre(l.inicioConsumo, l.fimConsumo) : null,
+    })),
+  };
+}
+
+function lerRascunho({ params }: MockContext): Response {
+  const c = carregar(params.id);
+  if (!c) return PROPOSTA_NAO_ENCONTRADA();
+  const salvo = rascunhos()[params.id];
+  if (!salvo) return json<ProductBatchDraft>(rascunhoNovo(c));
+  // Produto que entrou na proposta por outro caminho sai da tabela.
+  const jaNaProposta = new Set(c.e.produtos.map((l) => l.produtoCodigo));
+  return json<ProductBatchDraft>({ ...salvo, linhas: salvo.linhas.filter((l) => !jaNaProposta.has(l.produtoCodigo)) });
+}
+
+function gravarRascunho(ctx: MockContext): Response {
+  const c = carregar(ctx.params.id);
+  if (!c) return PROPOSTA_NAO_ENCONTRADA();
+  const trava = travaDeEscrita(ctx.user, c);
+  if (trava) return trava;
+  const linhas = corpo<{ linhas: ProductBatchRow[] }>(ctx).linhas;
+  if (!Array.isArray(linhas)) return validacao([{ field: 'linhas', message: 'Informe as linhas do rascunho.' }]);
+  const novo = recalcularLote({ linhas, restritaAoCliente: !!allowlistDe(c), atualizadoEm: agoraIso() });
+  rascunhos()[ctx.params.id] = novo;
+  return json<ProductBatchDraft>(novo);
+}
+
+function limparRascunho(ctx: MockContext): Response {
+  const c = carregar(ctx.params.id);
+  if (!c) return PROPOSTA_NAO_ENCONTRADA();
+  const trava = travaDeEscrita(ctx.user, c);
+  if (trava) return trava;
+  delete rascunhos()[ctx.params.id];
+  return json<ProductBatchDraft>(rascunhoNovo(c));
+}
+
+function adicionarAoRascunho(ctx: MockContext): Response {
+  const c = carregar(ctx.params.id);
+  if (!c) return PROPOSTA_NAO_ENCONTRADA();
+  const trava = travaDeEscrita(ctx.user, c);
+  if (trava) return trava;
+  const codigo = corpo<{ produtoCodigo: string }>(ctx).produtoCodigo;
+  if (!naoVazio(codigo) || !elegivel(c, codigo)) return produtoNaoElegivel(c, String(codigo ?? ''));
+  if (c.e.produtos.some((l) => l.produtoCodigo === codigo)) {
+    return recusa(400, 'BAD_REQUEST', 'Este produto já está na proposta.');
+  }
+  const linha = linhaSugerida(c, codigo);
+  if (!linha) return produtoNaoElegivel(c, codigo);
+  return json<ProductBatchRow>(
+    recalcularLote({ linhas: [linha], restritaAoCliente: !!allowlistDe(c), atualizadoEm: null }).linhas[0],
+    201,
+  );
+}
+
+/** O veredito das linhas marcadas — uma entrada por campo faltando. */
+function errosDoLote(c: Carregada, linhas: ProductBatchRow[]): ProductBatchRowError[] {
+  const d = c.e.dados;
+  const erros: ProductBatchRowError[] = [];
+  const falta = (l: ProductBatchRow, field: string, message: string) =>
+    erros.push({ produtoCodigo: l.produtoCodigo, field, message: `${l.produtoNome}: ${message}` });
+  for (const l of linhas) {
+    if (!elegivel(c, l.produtoCodigo)) falta(l, 'produtoCodigo', 'produto não elegível para esta proposta.');
+    if (c.e.produtos.some((x) => x.produtoCodigo === l.produtoCodigo)) falta(l, 'produtoCodigo', 'já está na proposta.');
+    if (typeof l.volume !== 'number' || !(l.volume > 0)) falta(l, 'volume', 'informe o volume (maior que zero).');
+    if (!naoVazio(l.incoterm)) falta(l, 'incoterm', 'informe o incoterm.');
+    if (!naoVazio(l.prazoPagamento) || deriveDaysFromSapCode(l.prazoPagamento) === null) {
+      falta(l, 'prazoPagamento', 'informe o prazo de pagamento.');
+    }
+    if (!isoValida(l.inicioConsumo)) falta(l, 'inicioConsumo', 'informe o início do consumo.');
+    if (!isoValida(l.fimConsumo)) falta(l, 'fimConsumo', 'informe o fim do consumo.');
+    if (isoValida(l.fimConsumo) && l.fimConsumo.slice(0, 10) > d.dataFimAnalise) {
+      falta(l, 'fimConsumo', `o fim do consumo não pode passar de ${brData(d.dataFimAnalise)} (fim da análise).`);
+    }
+    if (isoValida(l.inicioConsumo) && isoValida(l.fimConsumo) && l.inicioConsumo.slice(0, 10) > l.fimConsumo.slice(0, 10)) {
+      falta(l, 'inicioConsumo', 'o início do consumo não pode ser posterior ao fim.');
+    }
+    if (l.baseCodigo && !temCpv(l.produtoCodigo, l.baseCodigo)) falta(l, 'base', 'sem CPV cadastrado na base.');
+  }
+  return erros;
+}
+
+function salvarLote(ctx: MockContext): Response {
+  const c = carregar(ctx.params.id);
+  if (!c) return PROPOSTA_NAO_ENCONTRADA();
+  const trava = travaDeEscrita(ctx.user, c);
+  if (trava) return trava;
+  const enviadas = corpo<{ linhas: ProductBatchRow[] }>(ctx).linhas;
+  const marcadas = Array.isArray(enviadas) ? enviadas.filter((l) => l.selecionado) : [];
+  if (marcadas.length === 0) {
+    return recusa(400, 'BAD_REQUEST', 'Marque ao menos um produto para salvar.', { errors: [] });
+  }
+  const erros = errosDoLote(c, marcadas);
+  if (erros.length > 0) {
+    return recusa(400, 'VALIDATION_ERROR', 'Corrija os campos indicados antes de salvar.', { errors: erros });
+  }
+  const criadas: ProductLine[] = [];
+  for (const l of marcadas) {
+    const r = montarLinha(
+      c,
+      {
+        produtoCodigo: l.produtoCodigo,
+        base: l.base || undefined,
+        baseCodigo: l.baseCodigo ?? undefined,
+        volume: l.volume as number,
+        margemProposta: typeof l.margemProposta === 'number' ? l.margemProposta : undefined,
+        inicioConsumo: l.inicioConsumo,
+        fimConsumo: l.fimConsumo,
+        incoterm: l.incoterm,
+        prazoPagamentoDias: deriveDaysFromSapCode(l.prazoPagamento) as number,
+        prazoPagamento: l.prazoPagamento,
+      },
+      null,
+    );
+    if (r instanceof Response) return r;
+    criadas.push(r);
+  }
+  // Tudo ou nada: só agora a proposta ganha as linhas e o rascunho perde as marcadas.
+  c.e.produtos.push(...criadas);
+  marcarDesatualizado(c.e);
+  const salvo = rascunhos()[ctx.params.id];
+  const codigos = new Set(criadas.map((l) => l.produtoCodigo));
+  if (salvo) rascunhos()[ctx.params.id] = { ...salvo, linhas: salvo.linhas.filter((l) => !codigos.has(l.produtoCodigo)) };
+  return json<ProductLine[]>(criadas, 200);
 }
 
 function termosComerciais(ctx: MockContext): Response {
@@ -1402,6 +1587,14 @@ rotas('propostas', [
   { method: 'POST', pattern: '/proposals/:id/product-lines', handler: criarLinha },
   { method: 'POST', pattern: '/proposals/:id/product-lines/commercial-terms', handler: termosComerciais },
   { method: 'GET', pattern: '/proposals/:id/product-lines/defaults', handler: padroesDoProduto },
+
+  // Inclusão de produtos em lote (US 69180)
+  { method: 'GET', pattern: '/proposals/:id/product-batch', handler: lerRascunho },
+  { method: 'PUT', pattern: '/proposals/:id/product-batch', handler: gravarRascunho },
+  { method: 'DELETE', pattern: '/proposals/:id/product-batch', handler: limparRascunho },
+  { method: 'POST', pattern: '/proposals/:id/product-batch/rows', handler: adicionarAoRascunho },
+  { method: 'POST', pattern: '/proposals/:id/product-batch/submit', handler: salvarLote },
+
   { method: 'PUT', pattern: '/proposals/:id/product-lines/:lineId', handler: substituirLinha },
   { method: 'POST', pattern: '/proposals/:id/product-lines/:lineId', handler: removerLinha },
   { method: 'DELETE', pattern: '/proposals/:id/product-lines/:lineId', handler: removerLinha },

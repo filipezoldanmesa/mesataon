@@ -175,3 +175,21 @@ export function InboxIcon(props: IconProps) {
     </Icon>
   );
 }
+
+/** Close / remove ("X"). */
+export function CloseIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <path d="M4 4l8 8M12 4l-8 8" />
+    </Icon>
+  );
+}
+
+/** Copy the row above into this one (arrow pointing down onto a line). */
+export function CopyDownIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <path d="M8 2.5v8M5 7.5l3 3 3-3M3.5 13.5h9" />
+    </Icon>
+  );
+}

@@ -66,6 +66,7 @@ import { isExpiredSessionError } from "@/lib/api-errors";
 import { redirectToLogin } from "@/lib/auth";
 import { withOneRetry } from "@/lib/with-retry";
 import { SalesAreaModal } from "@/components/proposals/sales-area-modal";
+import { ProductBatchTable } from "@/components/proposals/product-batch-table";
 import { definirAreaVendaOportunidade } from "@/lib/opportunities/opportunity-creation.api";
 
 const SEARCH_DEBOUNCE_MS = 300;
@@ -1306,7 +1307,7 @@ function ProductModal({
     // the safety net if the adapter returns null after first save.
     if (editing && margemSugerida === null && margemProposta === undefined) {
       setValidationError(
-        "Informe a margem proposta: a margem sugerida não está disponível para este produto nesta base.",
+        "Informe a margem proposta: a margem realizada não está disponível para este produto nesta base.",
       );
       return;
     }
@@ -1611,7 +1612,7 @@ function ProductModal({
               </b>
             </span>
             <span>
-              Margem sugerida:{" "}
+              Margem realizada:{" "}
               <b
                 className="text-(--color-text)"
                 data-testid="pm-margem-sugerida"
@@ -1658,7 +1659,7 @@ function ProductModal({
               className="mt-1 text-[12px] text-(--yellow-700)"
               data-testid="pm-sem-margem-referencia"
             >
-              Margem sugerida indisponível: a referência de margem só existe
+              Margem realizada indisponível: a referência de margem só existe
               após a simulação de preço — informe a{" "}
               <strong>margem proposta</strong> manualmente.
             </p>
@@ -2142,12 +2143,6 @@ export function ProductLinesBlock({
     [proposalId, remove, busyLineId, onLinesChanged],
   );
 
-  function openAddModal() {
-    setSaveStatus("idle");
-    setSaveErrorMessage("");
-    setModalLine(null);
-  }
-
   function openEditModal(line: ProductLine) {
     setSaveStatus("idle");
     setSaveErrorMessage("");
@@ -2255,7 +2250,7 @@ export function ProductLinesBlock({
                 <th className="py-2 pr-2 font-bold">Base</th>
                 <th className="py-2 pr-2 font-bold">Volume (m³/mês)</th>
                 <th className="py-2 pr-2 font-bold">Margem BP</th>
-                <th className="py-2 pr-2 font-bold">Margem sugerida</th>
+                <th className="py-2 pr-2 font-bold">Margem realizada</th>
                 <th className="py-2 pr-2 font-bold">Margem proposta</th>
                 <th className="py-2 pr-2 font-bold">CPV</th>
                 <th className="py-2 pr-2 font-bold">Preço final</th>
@@ -2333,13 +2328,20 @@ export function ProductLinesBlock({
 
       {/* Write control: hidden for a read-only profile (the API answers 403). */}
       {loadStatus === "loaded" && canWrite && (
-        <button
-          type="button"
-          onClick={openAddModal}
-          className="mt-3 rounded-[var(--radius-xxs)] border border-(--secondary-600) bg-(--neutral-40) px-4 py-2 text-(length:--t-caption) font-bold text-(--secondary-600) transition hover:bg-(--neutral-100)"
-        >
-          + Adicionar produto
-        </button>
+        <div className="mt-4">
+          <ProductBatchTable
+            proposalId={proposalId}
+            savedLines={lines}
+            minConsumo={minConsumo}
+            maxConsumo={maxConsumo}
+            listEligible={listEligible}
+            onSaved={(created) => {
+              setLines((prev) => [...prev, ...created]);
+              // Notify sibling panels to revalidate (CA-2 VBR-536).
+              onLinesChanged?.();
+            }}
+          />
+        </div>
       )}
 
       {modalLine !== undefined && (
