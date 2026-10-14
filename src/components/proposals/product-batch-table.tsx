@@ -57,8 +57,11 @@ const CELL_INPUT =
 const CELL_INPUT_INVALID = "border-(--color-danger)";
 const TH =
   "px-2 py-2 text-left text-(length:--t-small) font-bold uppercase tracking-[0.3px] text-(--color-text-muted)";
-const ICON_BTN =
-  "inline-flex size-8 items-center justify-center rounded-[var(--radius-xxs)] text-(--color-text-muted) transition hover:bg-(--neutral-40) hover:text-(--neutral-800) focus:outline-none focus-visible:ring-2 focus-visible:ring-(--secondary-700) disabled:cursor-not-allowed disabled:opacity-40";
+const ICON_BTN_BASE =
+  "inline-flex size-8 items-center justify-center rounded-[var(--radius-xxs)] transition focus:outline-none focus-visible:ring-2 focus-visible:ring-(--secondary-700) disabled:cursor-not-allowed disabled:opacity-40";
+const ICON_BTN = `${ICON_BTN_BASE} text-(--color-text-muted) hover:bg-(--neutral-40) hover:text-(--neutral-800)`;
+/** Same red as the "Remover" of the saved lines (`--red-700`). */
+const ICON_BTN_DANGER = `${ICON_BTN_BASE} text-(--red-700) hover:bg-(--red-100)`;
 
 type LoadStatus = "loading" | "loaded" | "error";
 type AutosaveStatus = "idle" | "saving" | "saved" | "error";
@@ -605,7 +608,7 @@ export function ProductBatchTable({
                           </button>
                           <button
                             type="button"
-                            className={ICON_BTN}
+                            className={ICON_BTN_DANGER}
                             title="Excluir da lista"
                             aria-label={`Excluir ${row.produtoNome} da lista`}
                             onClick={() => removeRow(codigo)}
