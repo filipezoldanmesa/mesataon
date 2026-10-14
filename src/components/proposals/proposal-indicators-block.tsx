@@ -169,7 +169,7 @@ function Field({ label, value }: { label: string; value: React.ReactNode }) {
       <div className="text-[12px] tracking-[0.3px] text-(--color-text-muted)">
         {label}
       </div>
-      <div className="mt-0.5 whitespace-nowrap text-(length:--t-h4) font-bold">
+      <div className="mt-0.5 whitespace-nowrap text-(length:--t-body) font-bold">
         {value}
       </div>
     </div>
